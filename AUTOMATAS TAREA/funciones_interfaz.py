@@ -9,6 +9,7 @@ palabras_entries = []
 palabras_texto = []
 
 transiciones = {}
+palabras_entrada = []
 # === Funciones ===
 def agregar_transicion(frame_transiciones):
     index = len(lineas_transiciones)
@@ -107,6 +108,8 @@ def transformar_palabra_a_texto(index, frame_palabras):
     texto = palabras_entries[index].get()
     if not texto:
         return
+
+    palabras_entrada.append(list(texto))
 
     palabras_entries[index].grid_remove()
     label = tk.Label(frame_palabras, text=f"{index+1}. {texto}", bg="#FDEDEC", anchor="w")
