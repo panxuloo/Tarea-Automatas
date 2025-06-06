@@ -63,7 +63,7 @@ tk.Button(frame_palabras, text="Agregar palabra", command=lambda: agregar_palabr
 frame_botones = tk.Frame(root)
 frame_botones.pack(pady=15)
 
-tk.Button(frame_botones, text="Simular", width=12, command=simularAPDFake()).grid(row=0, column=0, padx=10)
+tk.Button(frame_botones, text="Simular", width=12, command=simularAPD).grid(row=0, column=0, padx=10)
 tk.Button(frame_botones, text="Limpiar", width=12).grid(row=0, column=1, padx=10)
 tk.Button(frame_botones, text="Salir", width=12, command=root.destroy).grid(row=0, column=2, padx=10)
 

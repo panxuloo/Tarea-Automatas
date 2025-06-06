@@ -1,7 +1,3 @@
-def simularAPDFake():
-    print("Simulador de APD (versión fake)")
-    return
-
 def simularAPD(T:dict, Q:str, F:str, palabra:str, aceptada:str):
     stack = ["R"]
     q = Q  # Estado inicial
