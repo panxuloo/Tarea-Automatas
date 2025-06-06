@@ -8,6 +8,7 @@ transiciones_texto = []
 palabras_entries = []
 palabras_texto = []
 
+transiciones = {}
 # === Funciones ===
 def agregar_transicion(frame_transiciones):
     index = len(lineas_transiciones)
@@ -45,6 +46,8 @@ def transformar_transicion_a_texto(index, frame_transiciones):
     datos = [e.get() for e in lineas_transiciones[index]]
     if not all(datos):
         return
+
+    transiciones[(datos[0], datos[1], datos[2])] = (datos[3], datos[4])
 
     transiciones_data[index] = datos
 
