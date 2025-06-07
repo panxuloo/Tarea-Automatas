@@ -21,7 +21,6 @@ def simularAPD(T:dict, Q:str, F:str, palabra:str, aceptada:str):
             print(f"Error en la transición para {letra} con estado {q} y pila {stack}")
             break
 
-    print(stack)
 
     if aceptada == "estado_final":
         if q == F :
@@ -40,11 +39,14 @@ def simularAPD(T:dict, Q:str, F:str, palabra:str, aceptada:str):
 def main():
     print("Simulador de APD")
     T1 = {
-        "δ(q0,a,R)": "(q1,AR)",
-        "δ(q1,b,A)": "(q2,AA)",
-        "δ(q2,c,A)": "(q3,E)",
-        "δ(q3,d,A)": "(q4,E)",
-        "δ(q4,e,R)": "(q5,R)"
+        "δ(q0,a,R)": "(q0,AR)",
+        "δ(q0,a,A)": "(q0,AA)",
+        "δ(q0,b,A)": "(q1,BA)",
+        "δ(q1,b,B)": "(q1,BB)",
+        "δ(q1,c,B)": "(q2,E)",
+        "δ(q2,c,B)": "(q2,E)",
+        "δ(q2,c,A)": "(q2,E)",
+        "δ(q2,E,R)": "(q3,E)"
     }
     T2 = {
         "δ(q0,a,R)": "(q0,ABR)",
@@ -55,9 +57,9 @@ def main():
         "δ(q1,E,R)": "(q2,E)"
     }
     Q = "q0"
-    F1 = "q5"
+    F1 = "q3"
     F2 = "q2"
-    palabra1 = "abcde"
+    palabra1 = "aabbccccE"
     palabra = "aaaaaabbbE"
 
     simularAPD(T1, Q, F1, palabra1, "estado_final")
