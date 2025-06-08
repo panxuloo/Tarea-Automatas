@@ -32,130 +32,87 @@ def verificarDatos(estado_inicial_entry, estado_final_entry, aceptacion_var):
         resultado = simularAPD(transiciones, estado_inicial, estado_final, palabra, aceptacion_var.get())
     
 
-def simularAPD(T:dict, Q:str, F:str, palabra:str, aceptada:str):
+def simularAPD(transiciones: dict, estado_inicial: str, estado_final: str, palabra: list, modo_aceptacion: str):
     stack = ["R"]
-    q = Q  # Estado inicial
-    for letra in palabra:
-        try:
-            estado = f"δ({q},{letra},{stack.pop()})"    # δ(q0,a,R), con el pop() ya saco el elemento del tope de la pila, 
-                                                        # si resultado es "E" no lo vuelvo a agregar
-            resultado = T[estado]                       # (q1,AR)
+    estado_actual = estado_inicial
 
-            print(f"Transición: {estado}, resultado: {resultado}, pila actual: {stack}")
+    for simbolo in palabra:
+        tope_pila = stack[-1] if stack else None
+        clave = (estado_actual, simbolo, tope_pila)
 
-            q = resultado[1:3]                          # Actualizo estado actual 
-            tope = resultado[4:-1]                      # Tomo lo que agregare a la pila  
+        if clave not in transiciones:
+            return False  # No hay transición válida
 
-            for a in tope[::-1]:
-                if a != "E":
-                    stack.append(a)                     # Agrego a la pila (si no es vacía)
+        nuevo_estado, accion_pila = transiciones[clave]
+        estado_actual = nuevo_estado
 
-        except:
-            print("Palabra no aceptada")
-            print(f"Error en la transición para {letra} con estado {q} y pila {stack}")
+        if stack:
+            stack.pop()
+
+        for simbolo_pila in reversed(accion_pila):
+            if simbolo_pila != "E" and simbolo_pila != "":
+                stack.append(simbolo_pila)
+
+    # Manejo de transiciones ε post-palabra
+    max_epsilon = 10
+    epsilon_aplicadas = 0
+
+    while epsilon_aplicadas < max_epsilon:
+        tope_pila = stack[-1] if stack else None
+        clave_epsilon = (estado_actual, "E", tope_pila)
+
+        if clave_epsilon not in transiciones:
             break
 
+        nuevo_estado, accion_pila = transiciones[clave_epsilon]
+        estado_actual = nuevo_estado
 
-    if aceptada == "estado_final":
-        if q == F :
-            print("ACEPTADA - Estado final alcanzado")
-        else:
-            print("RECHAZADA - Estado final no alcanzado")
+        if stack:
+            stack.pop()
 
-    elif aceptada == "stack_vacio":
-        if len(stack) == 0:
-            print("ACEPTADA - Pila vacía")
-        else:
-            print("RECHAZADA - Pila no vacía")
-    
-    return
+        for simbolo_pila in reversed(accion_pila):
+            if simbolo_pila != "E" and simbolo_pila != "":
+                stack.append(simbolo_pila)
 
-# función de chat
-def simular_palabra(palabra, estado_inicial, estado_final, tipo_aceptacion):
-    """
-    Simula el procesamiento de una palabra por el APD
-    """
-    estado_actual = estado_inicial
-    pila = ['$']  # Símbolo inicial de la pila
-    posicion = 0
-    
-    print(f"Estado inicial: {estado_actual}, Pila: {pila}")
-    
-    while posicion < len(palabra):
-        simbolo = palabra[posicion]
-        tope_pila = pila[-1] if pila else None
-        
-        # Buscar transición aplicable
-        clave_transicion = (estado_actual, simbolo, tope_pila)
-        
-        if clave_transicion in transiciones:
-            nuevo_estado, accion_pila = transiciones[clave_transicion]
-            
-            # Aplicar transición
-            estado_actual = nuevo_estado
-            
-            # Actualizar pila
-            if tope_pila:
-                pila.pop()  # Quitar el tope
-            
-            # Agregar nuevos símbolos a la pila (si no es epsilon)
-            if accion_pila and accion_pila != 'ε' and accion_pila != '':
-                # Si hay múltiples símbolos, agregarlos en orden inverso
-                for simbolo_pila in reversed(accion_pila):
-                    pila.append(simbolo_pila)
-            
-            print(f"Transición: ({estado_actual}, {simbolo}, {tope_pila}) -> ({nuevo_estado}, {accion_pila})")
-            print(f"Estado: {estado_actual}, Pila: {pila}")
-            
-            posicion += 1
-        else:
-            print(f"No hay transición para ({estado_actual}, {simbolo}, {tope_pila})")
-            return False
-    
-    # Verificar aceptación
-    if tipo_aceptacion == "estado_final":
+        epsilon_aplicadas += 1
+
+    # Verificación de aceptación
+    if modo_aceptacion == "estado_final":
         return estado_actual == estado_final
-    else:  # stack_vacio
-        return len(pila) == 0 or (len(pila) == 1 and pila[0] == '$')
+    elif modo_aceptacion == "stack_vacio":
+        return len(stack) == 0
+    return False
     
-    
-#simularAPD(transiciones, estado_inicial, estado_final, palabra, aceptacion_var.get())
-def funcionSimularAPD(transiciones: dict, estado_inicial: str, estado_final: str, palabra: list, aceptacion_var: str):
-    stack = ["R"]  # Pila inicial
-    estado_actual = estado_inicial
-    
-    
-    return
 
 def main():
-    print("Simulador de APD")
-    T1 = {
-        "δ(q0,a,R)": "(q0,AR)",
-        "δ(q0,a,A)": "(q0,AA)",
-        "δ(q0,b,A)": "(q1,BA)",
-        "δ(q1,b,B)": "(q1,BB)",
-        "δ(q1,c,B)": "(q2,E)",
-        "δ(q2,c,B)": "(q2,E)",
-        "δ(q2,c,A)": "(q2,E)",
-        "δ(q2,E,R)": "(q3,E)"
+    # Definir el APD
+    estado_inicial = "q0"
+    estado_final = "qf"
+    
+    transiciones = {
+        ("q0", "a", "R"): ("q0", ["A", "R"]),    # Primera 'a'
+        ("q0", "a", "A"): ("q0", ["A", "A"]),    # Más 'a's
+        ("q0", "b", "A"): ("q1", ["E"]),          # Primera 'b'
+        ("q1", "b", "A"): ("q1", ["E"]),          # Más 'b's
+        ("q1", "E", "R"): ("qf", ["R"])            # Aceptar si solo queda R
     }
-    T2 = {
-        "δ(q0,a,R)": "(q0,ABR)",
-        "δ(q0,a,A)": "(q0,E)",
-        "δ(q0,a,B)": "(q0,ABB)",
-        "δ(q0,b,B)": "(q1,E)",
-        "δ(q1,b,B)": "(q1,E)",
-        "δ(q1,E,R)": "(q2,E)"
-    }
-    Q = "q0"
-    F1 = "q3"
-    F2 = "q2"
-    palabra1 = "aabbccccE"
-    palabra = "aaaaaabbbE"
-
-    simularAPD(T1, Q, F1, palabra1, "estado_final")
-
-    simularAPD(T2, Q, F2, palabra, "stack_vacio")
+    
+    # Palabras de prueba
+    palabras_prueba = [
+        ["a", "b"],           # ✅ Debería aceptar
+        ["a", "a", "b", "b"], # ✅ Debería aceptar  
+        ["a", "a", "b"],      # ❌ Debería rechazar
+        ["a", "b", "b"],      # ❌ Debería rechazar
+        ["b", "a", "b"],           # ❌ Debería rechazar
+    ]
+    
+    # Probar cada palabra
+    for i, palabra in enumerate(palabras_prueba):
+        print(f"\n📝 PRUEBA {i+1}: {''.join(palabra)}")
+        print("-" * 40)
+        resultado = simularAPD(transiciones, estado_inicial, estado_final, palabra, "estado_final")
+        print(f"🏁 Resultado: {'ACEPTADA' if resultado else 'RECHAZADA'}")
+        print("=" * 60)
 
 
 if __name__ == "__main__":
