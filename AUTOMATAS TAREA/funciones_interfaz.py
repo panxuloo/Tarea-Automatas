@@ -10,6 +10,7 @@ palabras_texto = []
 
 transiciones = {}
 palabras_entrada = []
+
 # === Funciones ===
 def agregar_transicion(frame_transiciones):
     index = len(lineas_transiciones)

@@ -1,3 +1,37 @@
+from funciones_interfaz import transiciones, palabras_entrada
+
+def verificarDatos(estado_inicial_entry, estado_final_entry, aceptacion_var):
+    # Obtener estado inicial
+    estado_inicial = estado_inicial_entry.get().strip()
+    
+    # Obtener estado final solo si la aceptación es por estado final
+    if aceptacion_var.get() == "estado_final":
+        estado_final = estado_final_entry.get().strip()
+    else:
+        estado_final = None
+    
+    # Validaciones (falta implementar ventanas emergentes de tkinter)
+    # y ponerles try exception
+    if not estado_inicial:
+        print("Error: Debe especificar el estado inicial")
+        return
+    
+    if not transiciones:
+        print("Error: Debe especificar al menos una transición")
+        return
+    
+    if not palabras_entrada:
+        print("Error: Debe especificar al menos una palabra de entrada")
+        return
+    
+    if aceptacion_var.get() == "estado_final" and not estado_final:
+        print("Error: Debe especificar el estado final cuando la aceptación es por estado final")
+        return
+    
+    for palabra in palabras_entrada:
+        resultado = simularAPD(transiciones, estado_inicial, estado_final, palabra, aceptacion_var.get())
+    
+
 def simularAPD(T:dict, Q:str, F:str, palabra:str, aceptada:str):
     stack = ["R"]
     q = Q  # Estado inicial
@@ -34,7 +68,64 @@ def simularAPD(T:dict, Q:str, F:str, palabra:str, aceptada:str):
         else:
             print("RECHAZADA - Pila no vacía")
     
-    return 
+    return
+
+# función de chat
+def simular_palabra(palabra, estado_inicial, estado_final, tipo_aceptacion):
+    """
+    Simula el procesamiento de una palabra por el APD
+    """
+    estado_actual = estado_inicial
+    pila = ['$']  # Símbolo inicial de la pila
+    posicion = 0
+    
+    print(f"Estado inicial: {estado_actual}, Pila: {pila}")
+    
+    while posicion < len(palabra):
+        simbolo = palabra[posicion]
+        tope_pila = pila[-1] if pila else None
+        
+        # Buscar transición aplicable
+        clave_transicion = (estado_actual, simbolo, tope_pila)
+        
+        if clave_transicion in transiciones:
+            nuevo_estado, accion_pila = transiciones[clave_transicion]
+            
+            # Aplicar transición
+            estado_actual = nuevo_estado
+            
+            # Actualizar pila
+            if tope_pila:
+                pila.pop()  # Quitar el tope
+            
+            # Agregar nuevos símbolos a la pila (si no es epsilon)
+            if accion_pila and accion_pila != 'ε' and accion_pila != '':
+                # Si hay múltiples símbolos, agregarlos en orden inverso
+                for simbolo_pila in reversed(accion_pila):
+                    pila.append(simbolo_pila)
+            
+            print(f"Transición: ({estado_actual}, {simbolo}, {tope_pila}) -> ({nuevo_estado}, {accion_pila})")
+            print(f"Estado: {estado_actual}, Pila: {pila}")
+            
+            posicion += 1
+        else:
+            print(f"No hay transición para ({estado_actual}, {simbolo}, {tope_pila})")
+            return False
+    
+    # Verificar aceptación
+    if tipo_aceptacion == "estado_final":
+        return estado_actual == estado_final
+    else:  # stack_vacio
+        return len(pila) == 0 or (len(pila) == 1 and pila[0] == '$')
+    
+    
+#simularAPD(transiciones, estado_inicial, estado_final, palabra, aceptacion_var.get())
+def funcionSimularAPD(transiciones: dict, estado_inicial: str, estado_final: str, palabra: list, aceptacion_var: str):
+    stack = ["R"]  # Pila inicial
+    estado_actual = estado_inicial
+    
+    
+    return
 
 def main():
     print("Simulador de APD")
