@@ -1,4 +1,4 @@
-from funciones_interfaz import transiciones, palabras_entrada
+from funciones_interfaz import transiciones, palabras_entrada, mostrar_resultados_palabras
 
 def verificarDatos(estado_inicial_entry, estado_final_entry, aceptacion_var):
     # Obtener estado inicial
@@ -28,9 +28,13 @@ def verificarDatos(estado_inicial_entry, estado_final_entry, aceptacion_var):
         print("Error: Debe especificar el estado final cuando la aceptación es por estado final")
         return
     
+    resultados = []
+    
     for palabra in palabras_entrada:
         resultado = simularAPD(transiciones, estado_inicial, estado_final, palabra, aceptacion_var.get())
+        resultados.append(resultado)
     
+    mostrar_resultados_palabras(resultados)
 
 def simularAPD(transiciones: dict, estado_inicial: str, estado_final: str, palabra: list, modo_aceptacion: str):
     stack = ["R"]
@@ -82,38 +86,3 @@ def simularAPD(transiciones: dict, estado_inicial: str, estado_final: str, palab
     elif modo_aceptacion == "stack_vacio":
         return len(stack) == 0
     return False
-    
-
-def main():
-    # Definir el APD
-    estado_inicial = "q0"
-    estado_final = "qf"
-    
-    transiciones = {
-        ("q0", "a", "R"): ("q0", ["A", "R"]),    # Primera 'a'
-        ("q0", "a", "A"): ("q0", ["A", "A"]),    # Más 'a's
-        ("q0", "b", "A"): ("q1", ["E"]),          # Primera 'b'
-        ("q1", "b", "A"): ("q1", ["E"]),          # Más 'b's
-        ("q1", "E", "R"): ("qf", ["R"])            # Aceptar si solo queda R
-    }
-    
-    # Palabras de prueba
-    palabras_prueba = [
-        ["a", "b"],           # ✅ Debería aceptar
-        ["a", "a", "b", "b"], # ✅ Debería aceptar  
-        ["a", "a", "b"],      # ❌ Debería rechazar
-        ["a", "b", "b"],      # ❌ Debería rechazar
-        ["b", "a", "b"],           # ❌ Debería rechazar
-    ]
-    
-    # Probar cada palabra
-    for i, palabra in enumerate(palabras_prueba):
-        print(f"\n📝 PRUEBA {i+1}: {''.join(palabra)}")
-        print("-" * 40)
-        resultado = simularAPD(transiciones, estado_inicial, estado_final, palabra, "estado_final")
-        print(f"🏁 Resultado: {'ACEPTADA' if resultado else 'RECHAZADA'}")
-        print("=" * 60)
-
-
-if __name__ == "__main__":
-    main()

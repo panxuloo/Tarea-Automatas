@@ -7,6 +7,7 @@ transiciones_texto = []
 
 palabras_entries = []
 palabras_texto = []
+palabras_resultados = []
 
 transiciones = {}
 palabras_entrada = []
@@ -104,6 +105,7 @@ def agregar_palabra(frame_palabras):
     entry.bind("<Return>", lambda event, idx=index: transformar_palabra_a_texto(idx, frame_palabras))
     palabras_entries.append(entry)
     palabras_texto.append(None)
+    palabras_resultados.append(None)
 
 def transformar_palabra_a_texto(index, frame_palabras):
     texto = palabras_entries[index].get()
@@ -117,6 +119,33 @@ def transformar_palabra_a_texto(index, frame_palabras):
     label.grid(row=index, column=0, sticky="w")
     palabras_texto[index] = (label,)
     
+def mostrar_resultados_palabras(resultados): # funcion dada por chat para los resultados
+    for index, resultado in enumerate(resultados):
+        # Si ya hay un resultado previo, eliminarlo
+        if palabras_resultados[index] is not None:
+            palabras_resultados[index].destroy()
+        
+        # Solo mostrar resultado si la palabra ya está convertida a texto
+        if palabras_texto[index] is not None:
+            simbolo = "✓" if resultado else "✗"
+            color = "green" if resultado else "red"
+            
+            resultado_label = tk.Label(
+                palabras_texto[index][0].master,  # Usar el mismo frame padre
+                text=simbolo,
+                fg=color,
+                bg="#FDEDEC",
+                font=("Arial", 12, "bold")
+            )
+            resultado_label.grid(row=index, column=1, sticky="w", padx=(5, 0))
+            palabras_resultados[index] = resultado_label
+
+def limpiar_resultados_palabras(): # funcion dada por chat para limpiar
+    for index in range(len(palabras_resultados)):
+        if palabras_resultados[index] is not None:
+            palabras_resultados[index].destroy()
+            palabras_resultados[index] = None
+
 def actualizar_estado_final_entry(aceptacion_var, estado_final_entry):
     if aceptacion_var.get() == "estado_final":
         estado_final_entry.config(state="normal")
