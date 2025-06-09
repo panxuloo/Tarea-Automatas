@@ -39,13 +39,21 @@ def verificarDatos(estado_inicial_entry, estado_final_entry, aceptacion_var):
 def simularAPD(transiciones: dict, estado_inicial: str, estado_final: str, palabra: list, modo_aceptacion: str):
     stack = ["R"]
     estado_actual = estado_inicial
+    
+    palabra_con_epsilon = palabra + ["E"]
 
-    for simbolo in palabra:
-        tope_pila = stack[-1] if stack else None
+    for simbolo in palabra_con_epsilon:
+        if stack:
+            tope_pila = stack[-1]
+        else:
+            tope_pila = None
         clave = (estado_actual, simbolo, tope_pila)
 
         if clave not in transiciones:
-            return False  # No hay transición válida
+            # Si es epsilon y no hay transición, continuamos (no es error)
+            if simbolo == "E":
+                break
+            return False  # No hay transición válida para símbolo normal
 
         nuevo_estado, accion_pila = transiciones[clave]
         estado_actual = nuevo_estado
@@ -56,29 +64,6 @@ def simularAPD(transiciones: dict, estado_inicial: str, estado_final: str, palab
         for simbolo_pila in reversed(accion_pila):
             if simbolo_pila != "E" and simbolo_pila != "":
                 stack.append(simbolo_pila)
-
-    # Manejo de transiciones ε post-palabra
-    max_epsilon = 10
-    epsilon_aplicadas = 0
-
-    while epsilon_aplicadas < max_epsilon:
-        tope_pila = stack[-1] if stack else None
-        clave_epsilon = (estado_actual, "E", tope_pila)
-
-        if clave_epsilon not in transiciones:
-            break
-
-        nuevo_estado, accion_pila = transiciones[clave_epsilon]
-        estado_actual = nuevo_estado
-
-        if stack:
-            stack.pop()
-
-        for simbolo_pila in reversed(accion_pila):
-            if simbolo_pila != "E" and simbolo_pila != "":
-                stack.append(simbolo_pila)
-
-        epsilon_aplicadas += 1
 
     # Verificación de aceptación
     if modo_aceptacion == "estado_final":
