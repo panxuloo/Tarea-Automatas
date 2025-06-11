@@ -1,71 +1,75 @@
-def simularAPD(T:dict, Q:str, F:str, palabra:str, aceptada:str):
-    stack = ["R"]
-    q = Q  # Estado inicial
-    for letra in palabra:
-        try:
-            estado = f"δ({q},{letra},{stack.pop()})"    # δ(q0,a,R), con el pop() ya saco el elemento del tope de la pila, 
-                                                        # si resultado es "E" no lo vuelvo a agregar
-            resultado = T[estado]                       # (q1,AR)
+from funciones_interfaz import transiciones, palabras_entrada, mostrar_resultados_palabras, transformar
+import tkinter.messagebox as messagebox
 
-            print(f"Transición: {estado}, resultado: {resultado}, pila actual: {stack}")
+def verificarDatos(frame_transiciones, frame_palabra, estado_inicial_entry, estado_final_entry, aceptacion_var):
+    # Obtener estado inicial
 
-            q = resultado[1:3]                          # Actualizo estado actual 
-            tope = resultado[4:-1]                      # Tomo lo que agregare a la pila  
-
-            for a in tope[::-1]:
-                if a != "E":
-                    stack.append(a)                     # Agrego a la pila (si no es vacía)
-
-        except:
-            print("Palabra no aceptada")
-            print(f"Error en la transición para {letra} con estado {q} y pila {stack}")
-            break
-
-
-    if aceptada == "estado_final":
-        if q == F :
-            print("ACEPTADA - Estado final alcanzado")
-        else:
-            print("RECHAZADA - Estado final no alcanzado")
-
-    elif aceptada == "stack_vacio":
-        if len(stack) == 0:
-            print("ACEPTADA - Pila vacía")
-        else:
-            print("RECHAZADA - Pila no vacía")
+    transformar(frame_transiciones, frame_palabra)
     
-    return 
+    estado_inicial = estado_inicial_entry.get().strip()
+    
+    # Obtener estado final solo si la aceptación es por estado final
+    if aceptacion_var.get() == "estado_final":
+        estado_final = estado_final_entry.get().strip()
+    else:
+        estado_final = None
+    
+    if not transiciones:
+        messagebox.showerror("Error","Error: Debe especificar al menos una transición")
+        return
 
-def main():
-    print("Simulador de APD")
-    T1 = {
-        "δ(q0,a,R)": "(q0,AR)",
-        "δ(q0,a,A)": "(q0,AA)",
-        "δ(q0,b,A)": "(q1,BA)",
-        "δ(q1,b,B)": "(q1,BB)",
-        "δ(q1,c,B)": "(q2,E)",
-        "δ(q2,c,B)": "(q2,E)",
-        "δ(q2,c,A)": "(q2,E)",
-        "δ(q2,E,R)": "(q3,E)"
-    }
-    T2 = {
-        "δ(q0,a,R)": "(q0,ABR)",
-        "δ(q0,a,A)": "(q0,E)",
-        "δ(q0,a,B)": "(q0,ABB)",
-        "δ(q0,b,B)": "(q1,E)",
-        "δ(q1,b,B)": "(q1,E)",
-        "δ(q1,E,R)": "(q2,E)"
-    }
-    Q = "q0"
-    F1 = "q3"
-    F2 = "q2"
-    palabra1 = "aabbccccE"
-    palabra = "aaaaaabbbE"
+    if not estado_inicial:
+        messagebox.showerror("Error","Error: Debe especificar el estado inicial")
+        return
+    
+    if not palabras_entrada:
+        messagebox.showerror("Error","Error: Debe especificar al menos una palabra de entrada")
+        return
+    
+    if aceptacion_var.get() == "estado_final" and not estado_final:
+        messagebox.showerror("Error","Error: Debe especificar el estado final cuando la aceptación es por estado final")
+        return
+    
+    resultados = []
+    
+    for palabra in palabras_entrada:
+        resultado = simularAPD(transiciones, estado_inicial, estado_final, palabra, aceptacion_var.get())
+        resultados.append(resultado)
+    
+    mostrar_resultados_palabras(resultados)
 
-    simularAPD(T1, Q, F1, palabra1, "estado_final")
+def simularAPD(transiciones: dict, estado_inicial: str, estado_final: str, palabra: list, modo_aceptacion: str):
+    stack = ["R"]
+    estado_actual = estado_inicial
+    
+    palabra_con_epsilon = palabra + ["E"]
 
-    simularAPD(T2, Q, F2, palabra, "stack_vacio")
+    for simbolo in palabra_con_epsilon:
+        if stack:
+            tope_pila = stack[-1]
+        else:
+            tope_pila = None
+        clave = (estado_actual, simbolo, tope_pila)
 
+        if clave not in transiciones:
+            # Si es epsilon y no hay transición, continuamos (no es error)
+            if simbolo == "E":
+                break
+            return False  # No hay transición válida para símbolo normal
 
-if __name__ == "__main__":
-    main()
+        nuevo_estado, accion_pila = transiciones[clave]
+        estado_actual = nuevo_estado
+
+        if stack:
+            stack.pop()
+
+        for simbolo_pila in reversed(accion_pila):
+            if simbolo_pila != "E" and simbolo_pila != "":
+                stack.append(simbolo_pila)
+
+    # Verificación de aceptación
+    if modo_aceptacion == "estado_final":
+        return estado_actual == estado_final
+    elif modo_aceptacion == "stack_vacio":
+        return len(stack) == 0
+    return False
