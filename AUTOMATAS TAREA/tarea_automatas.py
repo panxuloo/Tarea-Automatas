@@ -151,7 +151,7 @@ frame_transiciones_container, frame_transiciones, canvas_trans = crear_frame_scr
 )
 frame_transiciones_container.grid(row=0, column=0, padx=(0,10), sticky="nsew")
 
-tk.Label(frame_transiciones, text="δ ( q, símbolo, tope_pila ) = ( q', pila')", bg="#E6F7FF").grid(row=0, column=0, columnspan=13, pady=(5,0))
+tk.Label(frame_transiciones, text="δ ( q, símbolo, tope de la pila ) = ( q', pila')", bg="#E6F7FF").grid(row=0, column=0, columnspan=13, pady=(5,0))
 agregar_transicion(frame_transiciones)
 agregar_transicion(frame_transiciones)
 
