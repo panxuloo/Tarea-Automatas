@@ -69,7 +69,7 @@ def agregar_transicion(frame_transiciones):
     for widget in frame_transiciones.grid_slaves(row=fila):
         widget.destroy()
     
-    # --- SOLUCIÓN: Elimina cualquier label de texto en esa fila antes de agregar widgets nuevos ---
+    # Elimina cualquier label de texto en esa fila antes de agregar widgets nuevos ---
     if transiciones_texto[index] is not None:
         label = transiciones_texto[index][0]
         label.destroy()

@@ -116,7 +116,6 @@ def limpiar_todo():
     
     actualizar_alfabeto()
     
-    # Actualizar region de scroll después de limpiar
     actualizar_scroll_region(canvas_trans)
     actualizar_scroll_region(canvas_palabras)
 
@@ -134,12 +133,12 @@ frame_superior.pack(fill="x", padx=10, pady=(0, 5))
 
 frame_contenedor = tk.Frame(root)
 frame_contenedor.pack(padx=10, pady=5, fill="x")
-frame_contenedor.columnconfigure(0, weight=2, uniform="col")  # Transiciones
-frame_contenedor.columnconfigure(1, weight=1, uniform="col")  # Estados (ahora más chico)
-frame_contenedor.columnconfigure(2, weight=1, uniform="col")  # Palabras (ahora más chico)
+frame_contenedor.columnconfigure(0, weight=2, uniform="col")
+frame_contenedor.columnconfigure(1, weight=1, uniform="col")
+frame_contenedor.columnconfigure(2, weight=1, uniform="col")
 frame_contenedor.columnconfigure(3, weight=1, uniform="col")
 
-# Alfabeto Σ
+# Alfabeto
 frame_alfabeto = tk.Frame(frame_superior, bg="white")
 frame_alfabeto.pack(side="left", anchor="w")
 label_alfabeto_global = crear_label_alfabeto(frame_alfabeto)
@@ -213,21 +212,40 @@ frame_condiciones = tk.LabelFrame(
     frame_contenedor,
     text="Condiciones de uso",
     font=("Arial", 12, "bold"),
-    bg="#F0F4F8"       # color suave, armónico con los demás
-)
-frame_condiciones.grid(row=0, column=3, padx=(10,0), sticky="nsew")
-
-# Dentro del frame, un texto explicativo:
-texto_condiciones = (
-    "El simbolo Epsilon está representado por una E."
-)
-tk.Label(
-    frame_condiciones,
-    text=texto_condiciones,
-    wraplength=200,    # para que el texto se ajuste bien al ancho
-    justify="left",
     bg="#F0F4F8"
-).pack(padx=10, pady=10)
+)
+frame_condiciones.grid(row=0, column=3, padx=(10, 0), sticky="nsew")
+
+# Crear Text widget dentro del frame
+text_widget = tk.Text(
+    frame_condiciones,
+    wrap="word",
+    width=35,
+    height=5,
+    bg="#F0F4F8",
+    bd=0,
+    highlightthickness=0,
+    font=("Arial", 10)
+)
+
+# Partes del texto
+texto1 = "El símbolo Epsilon está representado por una E. \n El estado inicial debe incluirse en la transición uno.\n El estado q' es el estado al que q pasará.\n"
+texto2 = "Para una palabra aceptada se mostrará: "
+texto3 = ", mientras que para una palabra rechazada se mostrará: "
+
+# Insertar con estilos
+text_widget.insert("1.0", texto1 + texto2)
+text_widget.insert("end", "✓", "tick")
+text_widget.insert("end", texto3)
+text_widget.insert("end", "✗", "equis")
+
+# Configurar colores
+text_widget.tag_config("tick", foreground="green")
+text_widget.tag_config("equis", foreground="red")
+
+# Hacerlo no editable
+text_widget.config(state="disabled")
+text_widget.pack(padx=10, pady=10, fill="both", expand=True)
 
 # === Botones inferiores ===
 frame_botones = tk.Frame(root)
