@@ -233,8 +233,12 @@ tk.Label(
 frame_botones = tk.Frame(root)
 frame_botones.pack(pady=15)
 
-tk.Button(frame_botones, text="Simular", width=12, 
-          command=lambda: verificarDatos(frame_transiciones, frame_palabras, estado_inicial_entry, estado_final_entry, aceptacion_var)).grid(row=0, column=0, padx=10)
+tk.Button(frame_botones, text="Simular", width=12, command=lambda: verificarDatos(frame_transiciones,
+                                                                                  frame_palabras, 
+                                                                                  estado_inicial_entry, 
+                                                                                  estado_final_entry, 
+                                                                                  aceptacion_var)).grid(row=0, column=0, padx=10)
+
 tk.Button(frame_botones, text="Limpiar", width=12, command=limpiar_todo).grid(row=0, column=1, padx=10)
 tk.Button(frame_botones, text="Salir", width=12, command=root.destroy).grid(row=0, column=2, padx=10)
 
