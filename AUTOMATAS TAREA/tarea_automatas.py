@@ -5,19 +5,31 @@ from logica import *
 def crear_frame_scrollable_contenedor(parent, titulo, bg_color):
     contenedor = tk.LabelFrame(parent, text=titulo, font=("Arial", 12, "bold"), bg=bg_color)
     
-    canvas = tk.Canvas(contenedor, bg=bg_color, highlightthickness=0)
+    # Crear canvas con tamaño mínimo
+    canvas = tk.Canvas(contenedor, bg=bg_color, highlightthickness=0, width=200, height=300)
     scrollbar = tk.Scrollbar(contenedor, orient="vertical", command=canvas.yview)
     scrollable_frame = tk.Frame(canvas, bg=bg_color)
 
     # Configurar el sistema de scroll
-    scrollable_frame.bind(
-        "<Configure>",
-        lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
-    )
+    def configurar_scroll(event=None):
+        canvas.configure(scrollregion=canvas.bbox("all"))
+        # Forzar actualización del scrollbar
+        canvas.update_idletasks()
+    
+    scrollable_frame.bind("<Configure>", configurar_scroll)
 
-    canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+    # Crear ventana en el canvas
+    canvas_window = canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
     canvas.configure(yscrollcommand=scrollbar.set)
 
+    # Ajustar el ancho del frame scrollable al canvas
+    def ajustar_ancho(event=None):
+        canvas_width = canvas.winfo_width()
+        canvas.itemconfig(canvas_window, width=canvas_width)
+    
+    canvas.bind('<Configure>', ajustar_ancho)
+
+    # Empacar elementos
     canvas.pack(side="left", fill="both", expand=True)
     scrollbar.pack(side="right", fill="y")
 
@@ -32,21 +44,41 @@ def bind_mousewheel(widget, canvas):
         if bbox is None:
             return
             
-        y0, y1 = canvas.yview()
-        y_pos = y0 * bbox[3]
-        
-        # Solo desplazar si hay contenido más allá de los límites visibles
-        if (event.delta < 0 and y_pos < bbox[3] - canvas.winfo_height()) or \
-           (event.delta > 0 and y_pos > 0):
-            canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+        # Obtener la vista actual
+        try:
+            y0, y1 = canvas.yview()
+            canvas_height = canvas.winfo_height()
+            content_height = bbox[3] - bbox[1] if bbox else 0
+            
+            # Solo desplazar si hay contenido que se pueda desplazar
+            if content_height > canvas_height:
+                delta = int(-1 * (event.delta / 120)) if hasattr(event, 'delta') else -1 if event.num == 4 else 1
+                canvas.yview_scroll(delta, "units")
+        except:
+            # En caso de error, intentar scroll básico
+            canvas.yview_scroll(int(-1 * (event.delta / 120)) if hasattr(event, 'delta') else 0, "units")
     
     # Vincular a todos los widgets hijos
     def bind_recursive(w):
-        w.bind("<MouseWheel>", _on_mousewheel)
-        for child in w.winfo_children():
-            bind_recursive(child)
+        try:
+            w.bind("<MouseWheel>", _on_mousewheel)
+            # También bind para Linux
+            w.bind("<Button-4>", _on_mousewheel)
+            w.bind("<Button-5>", _on_mousewheel)
+            for child in w.winfo_children():
+                bind_recursive(child)
+        except:
+            pass
     
     bind_recursive(widget)
+
+def actualizar_scroll_region(canvas):
+    def actualizar():
+        canvas.update_idletasks()
+        canvas.configure(scrollregion=canvas.bbox("all"))
+    
+    # Programar la actualización para después de que se procesen otros eventos
+    canvas.after_idle(actualizar)
 
 def limpiar_todo():
     global lineas_transiciones, transiciones_data, transiciones_texto
@@ -85,12 +117,14 @@ def limpiar_todo():
     actualizar_alfabeto()
     
     # Actualizar region de scroll después de limpiar
-    canvas_trans.configure(scrollregion=canvas_trans.bbox("all"))
-    canvas_palabras.configure(scrollregion=canvas_palabras.bbox("all"))
+    actualizar_scroll_region(canvas_trans)
+    actualizar_scroll_region(canvas_palabras)
 
 # === Pantalla ===
 root = tk.Tk()
 root.title("Simulador de Autómata Pushdown Determinista (APD)")
+root.geometry("1300x500")
+root.resizable(False, False)
 
 tk.Label(root, text="Simulador de Autómata Pushdown Determinista (APD)", 
          font=("Arial", 16, "bold")).pack(pady=10)
@@ -100,7 +134,10 @@ frame_superior.pack(fill="x", padx=10, pady=(0, 5))
 
 frame_contenedor = tk.Frame(root)
 frame_contenedor.pack(padx=10, pady=5, fill="x")
-frame_contenedor.columnconfigure((0, 1, 2), weight=1, uniform="col")
+frame_contenedor.columnconfigure(0, weight=2, uniform="col")  # Transiciones
+frame_contenedor.columnconfigure(1, weight=1, uniform="col")  # Estados (ahora más chico)
+frame_contenedor.columnconfigure(2, weight=1, uniform="col")  # Palabras (ahora más chico)
+frame_contenedor.columnconfigure(3, weight=1, uniform="col")
 
 # Alfabeto Σ
 frame_alfabeto = tk.Frame(frame_superior, bg="white")
@@ -113,7 +150,6 @@ frame_transiciones_container, frame_transiciones, canvas_trans = crear_frame_scr
     frame_contenedor, "Transiciones del APD", "#E6F7FF"
 )
 frame_transiciones_container.grid(row=0, column=0, padx=(0,10), sticky="nsew")
-canvas_trans.config(height=300)
 
 tk.Label(frame_transiciones, text="δ ( q, símbolo, tope_pila ) = ( q', pila')", bg="#E6F7FF").grid(row=0, column=0, columnspan=13, pady=(5,0))
 agregar_transicion(frame_transiciones)
@@ -123,7 +159,7 @@ btn_frame_trans = tk.Frame(frame_transiciones, bg="#E6F7FF", name="btn_frame_tra
 btn_frame_trans.grid(row=100, column=0, columnspan=13, pady=5)
 tk.Button(btn_frame_trans, text="Agregar transición", 
           command=lambda: [agregar_transicion(frame_transiciones), 
-                           canvas_trans.configure(scrollregion=canvas_trans.bbox("all"))]).pack(side="left", padx=5)
+                           actualizar_scroll_region(canvas_trans)]).pack(side="left", padx=5)
 tk.Button(btn_frame_trans, text="Editar transiciones", 
           command=lambda: editar_todas_las_transiciones(frame_transiciones)).pack(side="left", padx=5)
 
@@ -158,16 +194,40 @@ frame_palabras_container, frame_palabras, canvas_palabras = crear_frame_scrollab
     frame_contenedor, "Palabras de entrada", "#FDEDEC"
 )
 frame_palabras_container.grid(row=0, column=2, padx=(10,0), sticky="nsew")
-canvas_palabras.config(height=300)
 
 agregar_palabra(frame_palabras)
 agregar_palabra(frame_palabras)
 
-tk.Button(frame_palabras, text="Agregar palabra", 
+# Botones para palabras
+btn_frame_palabras = tk.Frame(frame_palabras, bg="#FDEDEC")
+btn_frame_palabras.grid(row=100, column=0, columnspan=5, pady=5, sticky="ew")
+
+tk.Button(btn_frame_palabras, text="Agregar palabra", 
           command=lambda: [agregar_palabra(frame_palabras),
-                           canvas_palabras.configure(scrollregion=canvas_palabras.bbox("all"))]).grid(row=100, column=0, columnspan=2, pady=5)
-tk.Button(frame_palabras, text="Editar palabras", 
-          command=lambda: editar_todas_las_palabras(frame_palabras)).grid(row=100, column=3, columnspan=2, pady=5)
+                           actualizar_scroll_region(canvas_palabras)]).pack(side="left", padx=5)
+tk.Button(btn_frame_palabras, text="Editar palabras", 
+          command=lambda: editar_todas_las_palabras(frame_palabras)).pack(side="left", padx=5)
+
+# === Condiciones de uso ===
+frame_condiciones = tk.LabelFrame(
+    frame_contenedor,
+    text="Condiciones de uso",
+    font=("Arial", 12, "bold"),
+    bg="#F0F4F8"       # color suave, armónico con los demás
+)
+frame_condiciones.grid(row=0, column=3, padx=(10,0), sticky="nsew")
+
+# Dentro del frame, un texto explicativo:
+texto_condiciones = (
+    "El simbolo Epsilon está representado por una E."
+)
+tk.Label(
+    frame_condiciones,
+    text=texto_condiciones,
+    wraplength=200,    # para que el texto se ajuste bien al ancho
+    justify="left",
+    bg="#F0F4F8"
+).pack(padx=10, pady=10)
 
 # === Botones inferiores ===
 frame_botones = tk.Frame(root)
@@ -181,5 +241,8 @@ tk.Button(frame_botones, text="Salir", width=12, command=root.destroy).grid(row=
 # Vincular eventos de scroll después de crear todos los elementos
 bind_mousewheel(frame_transiciones_container, canvas_trans)
 bind_mousewheel(frame_palabras_container, canvas_palabras)
+
+# Actualizar scrollbars inicialmente
+root.after(100, lambda: [actualizar_scroll_region(canvas_trans), actualizar_scroll_region(canvas_palabras)])
 
 root.mainloop()
