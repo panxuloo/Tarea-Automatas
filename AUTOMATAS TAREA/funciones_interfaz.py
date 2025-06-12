@@ -14,7 +14,40 @@ palabras_resultados = []
 transiciones = {}
 palabras_entrada = []
 
+alfabeto_label = None
+
 # === Funciones ===
+def actualizar_alfabeto():
+    global alfabeto_label
+    simbolos = set()
+    
+    # Recolectar símbolos de transiciones completadas (modo texto)
+    for idx, datos in enumerate(transiciones_data):
+        if datos is not None and transiciones_texto[idx] is not None:
+            simbolo = datos[1]  # El segundo elemento es el símbolo
+            if simbolo and simbolo != "E":  # No incluir epsilon
+                simbolos.add(simbolo)
+    
+    # Recolectar símbolos de transiciones en modo edición
+    for idx, entradas in enumerate(lineas_transiciones):
+        if entradas is not None and transiciones_texto[idx] is None:
+            simbolo = entradas[1].get().strip()
+            if simbolo and simbolo != "E":  # No incluir epsilon
+                simbolos.add(simbolo)
+    
+    # Ordenar alfabéticamente
+    alfabeto_ordenado = sorted(list(simbolos))
+    
+    # Actualizar el label del alfabeto
+    if alfabeto_label:
+        alfabeto_texto = f"Σ = {{{', '.join(alfabeto_ordenado)}}}"
+        alfabeto_label.config(text=alfabeto_texto)
+
+def crear_label_alfabeto(parent):
+    global alfabeto_label
+    alfabeto_label = tk.Label(parent, text="Σ = {}", font=("Arial", 10, "bold"), bg="#E6F7FF")
+    return alfabeto_label
+
 def agregar_transicion(frame_transiciones):
     # Encontrar el último índice no nulo
     ultimo_indice = -1
@@ -61,10 +94,17 @@ def agregar_transicion(frame_transiciones):
         if i == 0:
             tk.Label(frame_transiciones, text=",", bg="#E6F7FF").grid(row=fila, column=9)
 
+    # Agregar evento para actualizar alfabeto cuando se modifica el símbolo
+    def on_simbolo_change(event):
+        actualizar_alfabeto()
+
+    entradas[1].bind("<KeyRelease>", on_simbolo_change)
+
     for i, entry in enumerate(entradas):
         def on_enter(event, idx=i):
             if idx + 1 < len(entradas):
                 entradas[idx + 1].focus_set()
+            actualizar_alfabeto()
         entry.bind("<Return>", on_enter)
 
     tk.Label(frame_transiciones, text=")", bg="#E6F7FF").grid(row=fila, column=12)
@@ -82,6 +122,7 @@ def agregar_transicion(frame_transiciones):
             transiciones_data[index] = None
             transiciones_texto[index] = None
             actualizar_indices_transiciones(frame_transiciones)
+            actualizar_alfabeto()
 
         btn_eliminar = tk.Button(frame_transiciones, text="Eliminar", command=eliminar_fila, bg="#FFCCCC")
         btn_eliminar.grid(row=fila, column=13, padx=2)
@@ -92,6 +133,7 @@ def agregar_transicion(frame_transiciones):
     transiciones_texto[index] = None
 
     actualizar_indices_transiciones(frame_transiciones)
+    actualizar_alfabeto()
 
 def actualizar_indices_transiciones(frame_transiciones):
     idx_visual = 1
@@ -113,6 +155,10 @@ def actualizar_indices_transiciones(frame_transiciones):
                 if i < 2:
                     tk.Label(frame_transiciones, text=",", bg="#E6F7FF").grid(row=fila, column=2 + 2 * i)
             
+            def on_simbolo_change(event):
+                actualizar_alfabeto()
+            entradas[1].bind("<KeyRelease>", on_simbolo_change)
+            
             tk.Label(frame_transiciones, text=") = (", bg="#E6F7FF").grid(row=fila, column=7)
             
             for i, entry in enumerate(entradas[3:]):
@@ -131,6 +177,7 @@ def actualizar_indices_transiciones(frame_transiciones):
                     transiciones_data[idx_local] = None
                     transiciones_texto[idx_local] = None
                     actualizar_indices_transiciones(frame_transiciones)
+                    actualizar_alfabeto()
                 
                 btn_eliminar = tk.Button(frame_transiciones, text="Eliminar", 
                                        command=lambda idx=idx: eliminar_fila(idx), 
@@ -166,6 +213,7 @@ def transformar_transicion_a_texto(index, frame_transiciones, idx_visual):
     label = tk.Label(frame_transiciones, text=texto, bg="#E6F7FF", anchor="w")
     label.grid(row=fila, column=0, columnspan=12, sticky="w")
     transiciones_texto[index] = (label,)
+    actualizar_alfabeto()
     # Ya no se agrega automáticamente una nueva fila al presionar Enter
 
 def editar_todas_las_transiciones(frame_transiciones):
@@ -185,6 +233,10 @@ def editar_todas_las_transiciones(frame_transiciones):
             entradas.append(e)
             if i < 2:
                 tk.Label(frame_transiciones, text=",", bg="#E6F7FF").grid(row=fila, column=2 + 2 * i)
+
+        def on_simbolo_change(event):
+            actualizar_alfabeto()
+        entradas[1].bind("<KeyRelease>", on_simbolo_change)
 
         tk.Label(frame_transiciones, text=") : (", bg="#E6F7FF").grid(row=fila, column=7)
 
@@ -207,6 +259,7 @@ def editar_todas_las_transiciones(frame_transiciones):
                 transiciones_data[idx_local] = None
                 transiciones_texto[idx_local] = None
                 actualizar_indices_transiciones(frame_transiciones)
+                actualizar_alfabeto()
 
             btn_eliminar = tk.Button(frame_transiciones, text="Eliminar",
                                    command=lambda idx=idx: eliminar_fila(idx),
@@ -215,6 +268,8 @@ def editar_todas_las_transiciones(frame_transiciones):
 
         lineas_transiciones[idx] = entradas
         transiciones_texto[idx] = None
+        
+    actualizar_alfabeto()
 
 def agregar_palabra(frame_palabras):
     # Encontrar el siguiente índice realmente disponible
@@ -410,6 +465,7 @@ def transformar(frame_transiciones, frame_palabras):
         messagebox.showerror("Error", "ERROR: Debe especificar al menos una palabra de entrada")
         return False
     actualizar_indices_palabras(frame_palabras)
+    actualizar_alfabeto()
     return True
 
 def actualizar_estado_final_entry(aceptacion_var, estado_final_entry):
