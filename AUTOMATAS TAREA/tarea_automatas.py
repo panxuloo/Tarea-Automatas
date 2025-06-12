@@ -116,7 +116,6 @@ def limpiar_todo():
     
     actualizar_alfabeto()
     
-    # Actualizar region de scroll después de limpiar
     actualizar_scroll_region(canvas_trans)
     actualizar_scroll_region(canvas_palabras)
 
@@ -134,12 +133,12 @@ frame_superior.pack(fill="x", padx=10, pady=(0, 5))
 
 frame_contenedor = tk.Frame(root)
 frame_contenedor.pack(padx=10, pady=5, fill="x")
-frame_contenedor.columnconfigure(0, weight=2, uniform="col")  # Transiciones
-frame_contenedor.columnconfigure(1, weight=1, uniform="col")  # Estados (ahora más chico)
-frame_contenedor.columnconfigure(2, weight=1, uniform="col")  # Palabras (ahora más chico)
+frame_contenedor.columnconfigure(0, weight=2, uniform="col")
+frame_contenedor.columnconfigure(1, weight=1, uniform="col")
+frame_contenedor.columnconfigure(2, weight=1, uniform="col")
 frame_contenedor.columnconfigure(3, weight=1, uniform="col")
 
-# Alfabeto Σ
+# Alfabeto
 frame_alfabeto = tk.Frame(frame_superior, bg="white")
 frame_alfabeto.pack(side="left", anchor="w")
 label_alfabeto_global = crear_label_alfabeto(frame_alfabeto)

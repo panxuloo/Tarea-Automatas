@@ -2,8 +2,6 @@ from funciones_interfaz import transiciones, palabras_entrada, mostrar_resultado
 import tkinter.messagebox as messagebox
 
 def verificarDatos(frame_transiciones, frame_palabra, estado_inicial_entry, estado_final_entry, aceptacion_var):
-    # Obtener estado inicial
-
     transformar(frame_transiciones, frame_palabra)
     
     estado_inicial = estado_inicial_entry.get().strip()
